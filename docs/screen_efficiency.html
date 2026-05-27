@@ -51,7 +51,15 @@
             <p class="eyebrow">Reading Guide</p>
             <h2>스크린을 많이 받은 만큼 좌석 효율도 높았는가</h2>
           </div>
-          <ul id="eff-insights" class="insight-list"></ul>
+          <div>
+            <p class="analysis-copy">
+              이 페이지는 스크린 점유율 최고점 TOP10 영화의 일별 스크린 배정, 좌석 배정,
+              관객 점유율, 좌석판매율을 함께 비교합니다. 단순히 스크린을 많이 받은 영화가
+              문제라는 뜻이 아니라, 스크린 집중이 실제 관객 수요와 좌석 활용으로 얼마나
+              이어졌는지를 확인하기 위한 보조 지표입니다.
+            </p>
+            <ul id="eff-insights" class="insight-list"></ul>
+          </div>
         </article>
 
         <div class="grid">
@@ -83,12 +91,21 @@
         <div class="grid">
           <article class="card">
             <div class="card-head">
+              <h2>선택 영화 분석</h2>
+            </div>
+            <div id="movieDetail" class="movie-detail"></div>
+          </article>
+          <article class="card">
+            <div class="card-head">
               <h2>일별 스크린 점유율·좌석판매율·MII</h2>
             </div>
             <div class="chart-wrap tall">
               <canvas id="dailyEfficiencyChart"></canvas>
             </div>
           </article>
+        </div>
+
+        <div class="grid">
           <article class="card">
             <div class="card-head">
               <h2>영화별 요약</h2>
@@ -120,6 +137,11 @@
             <div><b>SOI</b><span>좌석 점유율 / 관객 점유율. 1보다 크면 관객 비중보다 좌석 배정 비중이 큽니다.</span></div>
             <div><b>MII</b><span>스크린 점유율 × (1 - 좌석판매율). 스크린 집중과 낮은 좌석 활용이 겹치는 정도입니다.</span></div>
           </div>
+          <p class="method-note">
+            해석은 KOBIS 박스오피스·좌석점유율 파일에서 산출한 값만 사용합니다. 좌석 데이터가
+            없는 날짜는 효율 평균에서 제외되며, 일부 영화는 관측일 전체가 아니라 좌석 데이터가
+            확보된 날짜를 중심으로 해석해야 합니다.
+          </p>
         </article>
       </section>
     </main>

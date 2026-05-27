@@ -19,6 +19,11 @@ function pct(value, digits = 1) {
   return parsed === null ? "-" : `${parsed.toFixed(digits)}%`;
 }
 
+function count(value) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed.toLocaleString("ko-KR") : "-";
+}
+
 function ratio(value, digits = 2) {
   const parsed = n(value);
   return parsed === null ? "-" : parsed.toFixed(digits);
@@ -89,6 +94,60 @@ function renderInsights() {
   ].filter(Boolean);
 
   document.getElementById("eff-insights").innerHTML = items.map((item) => `<li>${item}</li>`).join("");
+}
+
+function efficiencyLabel(row) {
+  const scei = n(row.mean_ScEI_screen_efficiency);
+  const mii = n(row.mean_MII_pct);
+  if (scei === null) return "좌석 데이터가 부족해 효율 판단을 보류해야 합니다.";
+  if (scei >= 1.1 && (mii === null || mii < 15)) {
+    return "관객 점유율이 스크린 점유율보다 높아 스크린 배정 대비 관객 효율이 비교적 높은 편입니다.";
+  }
+  if (scei < 0.8 && mii !== null && mii >= 15) {
+    return "스크린 배정 강도에 비해 관객 효율이 낮고, 좌석 미판매분까지 함께 나타난 구간이 있습니다.";
+  }
+  if (mii !== null && mii >= 20) {
+    return "스크린 집중과 낮은 좌석판매율이 함께 관측되어 좌석 활용 측면의 점검이 필요합니다.";
+  }
+  return "스크린 집중과 관객 효율이 중간 수준으로 관측됩니다.";
+}
+
+function coverageLabel(row) {
+  const observed = Number(row.observed_days || 0);
+  const seatDays = Number(row.seat_data_days || 0);
+  const coverage = observed ? (seatDays / observed) * 100 : 0;
+  if (coverage < 30) return `좌석 데이터 커버리지는 ${coverage.toFixed(1)}%로 낮아 해석에 주의가 필요합니다.`;
+  if (coverage < 60) return `좌석 데이터 커버리지는 ${coverage.toFixed(1)}%로 일부 기간 중심의 해석입니다.`;
+  return `좌석 데이터 커버리지는 ${coverage.toFixed(1)}%입니다.`;
+}
+
+function renderMovieDetail(movie) {
+  const row = effState.summary.find((item) => item.movie_nm === movie);
+  const container = document.getElementById("movieDetail");
+  if (!row) {
+    container.innerHTML = "<p>선택한 영화의 요약 데이터가 없습니다.</p>";
+    return;
+  }
+
+  const period =
+    row.over_30_period_start && row.over_30_period_end
+      ? `${row.over_30_period_start}~${row.over_30_period_end}`
+      : "30% 초과 기간 정보 없음";
+
+  container.innerHTML = `
+    <h3>${row.movie_nm}</h3>
+    <div class="detail-grid">
+      <div><span>최고 SS</span><b>${pct(row.peak_SS_screen_share_pct)}</b></div>
+      <div><span>최고일</span><b>${row.peak_screen_share_date || "-"}</b></div>
+      <div><span>평균 ScEI</span><b>${ratio(row.mean_ScEI_screen_efficiency)}</b></div>
+      <div><span>평균 MII</span><b>${pct(row.mean_MII_pct)}</b></div>
+      <div><span>관측일</span><b>${count(row.observed_days)}일</b></div>
+      <div><span>좌석 데이터</span><b>${count(row.seat_data_days)}일</b></div>
+    </div>
+    <p><b>30% 초과 구간:</b> ${period}</p>
+    <p><b>객관적 해석:</b> ${efficiencyLabel(row)}</p>
+    <p><b>자료 신뢰도:</b> ${coverageLabel(row)} 이 평가는 KOBIS 기반 산출 데이터에 한정하며, 좌석 데이터가 없는 날짜는 효율 지표에 반영되지 않습니다.</p>
+  `;
 }
 
 function renderEfficiencyBar() {
@@ -170,8 +229,13 @@ function renderMiiScatter() {
 function initMovieSelect() {
   const select = document.getElementById("effMovieSelect");
   select.innerHTML = effState.summary.map((row) => `<option value="${row.movie_nm}">${row.movie_nm}</option>`).join("");
-  select.addEventListener("change", () => renderDailyChart(select.value));
-  renderDailyChart(select.value || effState.summary[0]?.movie_nm);
+  select.addEventListener("change", () => {
+    renderMovieDetail(select.value);
+    renderDailyChart(select.value);
+  });
+  const initialMovie = select.value || effState.summary[0]?.movie_nm;
+  renderMovieDetail(initialMovie);
+  renderDailyChart(initialMovie);
 }
 
 function renderDailyChart(movie) {
