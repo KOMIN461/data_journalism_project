@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>KOBIS 스크린 집중·효율 지수</title>
+    <link rel="stylesheet" href="assets/styles.css?v=20260527-2" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+    <script src="data/screen_efficiency_indices/screen_efficiency_dashboard_data.js"></script>
+  </head>
+  <body class="efficiency-page">
+    <header class="site-header">
+      <div>
+        <p class="eyebrow">KOBIS Screen Efficiency Analysis</p>
+        <h1>스크린 집중·효율 지수 해석</h1>
+        <p class="lede">
+          2022년 7월부터 2025년 12월까지 스크린 점유율 최고점 TOP10 영화를 대상으로,
+          스크린 배정이 관객 수요와 좌석 활용으로 이어졌는지 살펴봅니다.
+        </p>
+      </div>
+    </header>
+
+    <nav class="tabs" aria-label="대시보드 이동">
+      <a class="tab" href="index.html">스크린 점유율</a>
+      <a class="tab active" href="screen_efficiency.html">집중·효율 지수</a>
+    </nav>
+
+    <main>
+      <section class="panel active">
+        <div class="metric-grid">
+          <article class="metric">
+            <span>분석 영화</span>
+            <strong id="eff-kpi-movies">-</strong>
+          </article>
+          <article class="metric">
+            <span>최고 스크린 점유율</span>
+            <strong id="eff-kpi-peak">-</strong>
+          </article>
+          <article class="metric">
+            <span>평균 MII 최고 영화</span>
+            <strong id="eff-kpi-mii">-</strong>
+          </article>
+          <article class="metric">
+            <span>좌석 데이터 커버리지</span>
+            <strong id="eff-kpi-coverage">-</strong>
+          </article>
+        </div>
+
+        <article class="analysis-block">
+          <div>
+            <p class="eyebrow">Reading Guide</p>
+            <h2>스크린을 많이 받은 만큼 좌석 효율도 높았는가</h2>
+          </div>
+          <ul id="eff-insights" class="insight-list"></ul>
+        </article>
+
+        <div class="grid">
+          <article class="card">
+            <div class="card-head">
+              <h2>영화별 스크린 집중과 관객 효율</h2>
+            </div>
+            <div class="chart-wrap tall">
+              <canvas id="efficiencyBarChart"></canvas>
+            </div>
+          </article>
+          <article class="card">
+            <div class="card-head">
+              <h2>스크린 점유율과 비효율 지수</h2>
+            </div>
+            <div class="chart-wrap tall">
+              <canvas id="miiScatterChart"></canvas>
+            </div>
+          </article>
+        </div>
+
+        <div class="toolbar">
+          <label>
+            영화
+            <select id="effMovieSelect"></select>
+          </label>
+        </div>
+
+        <div class="grid">
+          <article class="card">
+            <div class="card-head">
+              <h2>일별 스크린 점유율·좌석판매율·MII</h2>
+            </div>
+            <div class="chart-wrap tall">
+              <canvas id="dailyEfficiencyChart"></canvas>
+            </div>
+          </article>
+          <article class="card">
+            <div class="card-head">
+              <h2>영화별 요약</h2>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>영화</th>
+                    <th>최고 SS</th>
+                    <th>평균 ScEI</th>
+                    <th>평균 MII</th>
+                    <th>해석</th>
+                  </tr>
+                </thead>
+                <tbody id="effSummaryTable"></tbody>
+              </table>
+            </div>
+          </article>
+        </div>
+
+        <article class="card">
+          <div class="card-head">
+            <h2>지표 설명</h2>
+          </div>
+          <div class="definition-grid">
+            <div><b>SS</b><span>스크린 점유율. 특정 영화가 당일 스크린 배정에서 차지한 비율입니다.</span></div>
+            <div><b>ScEI</b><span>관객 점유율 / 스크린 점유율. 1보다 크면 스크린 배정 대비 관객 효율이 높습니다.</span></div>
+            <div><b>SOI</b><span>좌석 점유율 / 관객 점유율. 1보다 크면 관객 비중보다 좌석 배정 비중이 큽니다.</span></div>
+            <div><b>MII</b><span>스크린 점유율 × (1 - 좌석판매율). 스크린 집중과 낮은 좌석 활용이 겹치는 정도입니다.</span></div>
+          </div>
+        </article>
+      </section>
+    </main>
+
+    <footer>
+      Data source: KOBIS Open API and KOBIS seat occupancy downloads.
+    </footer>
+
+    <script src="assets/screen_efficiency.js?v=20260527-1"></script>
+  </body>
+</html>

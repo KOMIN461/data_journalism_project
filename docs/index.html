@@ -25,6 +25,7 @@
       <button class="tab" data-panel="single30">단일 영화 30%</button>
       <button class="tab" data-panel="concentration">집중 구간</button>
       <button class="tab" data-panel="files">자료</button>
+      <a class="tab" href="screen_efficiency.html">집중·효율 지수</a>
     </nav>
 
     <main>
@@ -153,6 +154,20 @@
           <div class="chart-wrap tall">
             <canvas id="concentrationChart"></canvas>
           </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>기간</th>
+                  <th>일수</th>
+                  <th>최고 점유율</th>
+                  <th>기준</th>
+                  <th>영화 조합</th>
+                </tr>
+              </thead>
+              <tbody id="concentrationTable"></tbody>
+            </table>
+          </div>
         </article>
       </section>
 
@@ -173,6 +188,8 @@
             <li><a href="data/single_movie_over_30_movie_summary.csv">single_movie_over_30_movie_summary.csv</a></li>
             <li><a href="data/single_movie_over_30_periods.csv">single_movie_over_30_periods.csv</a></li>
             <li><a href="data/single_movie_over_30_year_summary.csv">single_movie_over_30_year_summary.csv</a></li>
+            <li><a href="data/screen_efficiency_indices/screen_efficiency_daily_indices.csv">screen_efficiency_daily_indices.csv</a></li>
+            <li><a href="data/screen_efficiency_indices/screen_efficiency_movie_summary.csv">screen_efficiency_movie_summary.csv</a></li>
           </ul>
         </article>
       </section>
