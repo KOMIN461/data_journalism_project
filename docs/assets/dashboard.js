@@ -336,51 +336,117 @@ function renderPeriodTable() {
 }
 
 function initConcentrationControls() {
+  const years = [
+    ...new Set(
+      state.data.concentration.flatMap((row) => [
+        row.start_date.slice(0, 4),
+        row.end_date.slice(0, 4),
+      ]),
+    ),
+  ].sort();
+  setOptions(document.getElementById("concentrationYear"), years);
+  document
+    .getElementById("concentrationYear")
+    .addEventListener("change", renderConcentrationChart);
   document
     .getElementById("concentrationThreshold")
     .addEventListener("change", renderConcentrationChart);
 }
 
+function periodIntersectsYear(row, year) {
+  const start = new Date(row.start_date);
+  const end = new Date(row.end_date);
+  const yearStart = new Date(`${year}-01-01`);
+  const yearEnd = new Date(`${year}-12-31`);
+  return start <= yearEnd && end >= yearStart;
+}
+
+function shortMovies(value) {
+  const text = value || "";
+  return text.length > 34 ? `${text.slice(0, 34)}...` : text;
+}
+
 function renderConcentrationChart() {
   destroyChart("concentrationChart");
+  const year = document.getElementById("concentrationYear").value;
   const threshold = document.getElementById("concentrationThreshold").value;
   const rows = state.data.concentration
+    .filter((row) => periodIntersectsYear(row, year))
     .filter((row) => threshold === "all" || row.threshold === threshold)
-    .sort((a, b) => number(b.days) - number(a.days))
-    .slice(0, 20)
-    .reverse();
+    .sort((a, b) => a.start_date.localeCompare(b.start_date))
+    .slice(0, 30);
 
   state.charts.concentrationChart = new Chart(document.getElementById("concentrationChart"), {
     type: "bar",
     data: {
-      labels: rows.map((row) => row.representative_movies || row.movie_count),
+      labels: rows.map((row) => [
+        `${row.start_date.slice(5)}~${row.end_date.slice(5)}`,
+        shortMovies(row.representative_movies),
+      ]),
       datasets: [
         {
           label: "연속일수",
           data: rows.map((row) => number(row.days)),
+          yAxisID: "y",
           backgroundColor: rows.map((row) =>
             row.threshold === "70% 이상" ? "rgba(231, 111, 81, 0.82)" : "rgba(42, 157, 143, 0.82)",
           ),
         },
+        {
+          type: "line",
+          label: "기간 내 최고 점유율",
+          data: rows.map((row) => number(row.max_share)),
+          yAxisID: "y1",
+          borderColor: "#123047",
+          backgroundColor: "#123047",
+          pointRadius: 4,
+          pointHoverRadius: 7,
+          borderWidth: 2,
+          tension: 0.25,
+        },
       ],
     },
     options: {
-      indexAxis: "y",
       responsive: true,
       maintainAspectRatio: false,
       plugins: {
-        legend: { display: false },
+        legend: { position: "top" },
         tooltip: {
           callbacks: {
             title: (items) => rows[items[0].dataIndex].representative_movies,
             label: (context) => {
               const row = rows[context.dataIndex];
-              return `${row.threshold}, ${formatDays(row.days)}, 최고 ${formatPercent(row.max_share)}`;
+              if (context.dataset.type === "line") {
+                return `최고 점유율: ${formatPercent(row.max_share)}`;
+              }
+              return `${row.threshold}, ${formatDays(row.days)}`;
             },
           },
         },
       },
-      scales: { x: { beginAtZero: true, ticks: { callback: (value) => `${value}일` } } },
+      scales: {
+        x: {
+          ticks: {
+            maxRotation: 55,
+            minRotation: 35,
+            autoSkip: false,
+            font: { size: 10 },
+          },
+        },
+        y: {
+          beginAtZero: true,
+          position: "left",
+          title: { display: true, text: "연속일수" },
+          ticks: { callback: (value) => `${value}일` },
+        },
+        y1: {
+          beginAtZero: true,
+          position: "right",
+          title: { display: true, text: "최고 점유율" },
+          grid: { drawOnChartArea: false },
+          ticks: { callback: (value) => `${value}%` },
+        },
+      },
     },
   });
 }

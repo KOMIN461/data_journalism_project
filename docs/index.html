@@ -134,6 +134,10 @@
       <section id="concentration" class="panel">
         <div class="toolbar">
           <label>
+            연도
+            <select id="concentrationYear"></select>
+          </label>
+          <label>
             기준
             <select id="concentrationThreshold">
               <option value="all">전체</option>
@@ -144,7 +148,7 @@
         </div>
         <article class="card">
           <div class="card-head">
-            <h2>상위 1~3개 영화 합산 집중 기간</h2>
+            <h2>연도별 상위 1~3개 영화 합산 집중 기간</h2>
           </div>
           <div class="chart-wrap tall">
             <canvas id="concentrationChart"></canvas>
