@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>KOBIS 스크린 점유율 대시보드</title>
-    <link rel="stylesheet" href="assets/styles.css?v=20260527-3" />
+    <link rel="stylesheet" href="assets/styles.css?v=20260527-4" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
   </head>
   <body>
@@ -48,6 +48,44 @@
             <strong id="kpi-peak">-</strong>
           </article>
         </div>
+
+        <article class="analysis-block">
+          <div>
+            <p class="eyebrow">Objective Reading</p>
+            <h2>데이터로 확인되는 스크린 집중 현상</h2>
+          </div>
+          <div>
+            <p class="analysis-copy">
+              2020년 1월 1일부터 2026년 5월 25일까지의 KOBIS 일별 박스오피스 TOP10
+              데이터를 기준으로, 단독 영화가 하루 스크린 점유율 30% 이상을 기록한 날은
+              925일입니다. 이는 관측된 2,337일 중 약 39.6%에 해당합니다. 상위 1~3개
+              영화 합산 기준으로는 60% 이상 집중 구간이 누적 795일, 70% 이상 집중
+              구간이 누적 468일로 확인됩니다.
+            </p>
+            <ul class="evidence-list">
+              <li>
+                이 결과는 특정 흥행 기대작이 개봉 직후 극장 스크린 공급의 큰 비중을
+                차지하는 현상이 반복적으로 나타난다는 점을 보여줍니다.
+              </li>
+              <li>
+                기존 연구들은 스크린 수와 상영 기회가 관객 접근성 및 선택 가능성에
+                영향을 줄 수 있다고 봅니다. 따라서 스크린 집중은 단순 흥행 성과가 아니라
+                영화 선택 환경의 문제로도 해석할 필요가 있습니다.
+              </li>
+              <li>
+                다만 높은 스크린 점유율이 곧바로 부당한 배정이라는 뜻은 아닙니다.
+                관객 수요가 큰 영화는 높은 스크린 배정을 받을 수 있으므로, 좌석판매율과
+                관객 점유율을 함께 비교해야 합니다.
+              </li>
+            </ul>
+            <p class="source-note">
+              참고 관점: 「영화 흥행 집중도와 상영 스크린 집중도로 살펴본 한국 영화산업 10년」,
+              「한국 영화시장의 집중화 현상에 대한 논의」,
+              「한국 영화 4대 배급사의 흥행 10분위 기반 배급 행태 분석」,
+              「배급사의 의사결정이 영화 확산에 미치는 영향」.
+            </p>
+          </div>
+        </article>
 
         <div class="grid">
           <article class="card">
@@ -201,7 +239,9 @@
               이 탭은 스크린 점유율 최고점 TOP10 영화의 일별 스크린 배정, 좌석 배정,
               관객 점유율, 좌석판매율을 함께 비교합니다. 특정 영화가 스크린을 많이 받은
               사실 자체를 곧바로 문제로 판단하지 않고, 그 배정이 실제 관객 수요와 좌석
-              활용으로 얼마나 이어졌는지를 보조 지표로 확인합니다.
+              활용으로 얼마나 이어졌는지를 보조 지표로 확인합니다. 이 지표는 스크린
+              독과점 여부를 단정하기 위한 값이 아니라, 스크린 집중이 관객 반응과 어느
+              정도 균형을 이루었는지 점검하기 위한 해석 도구입니다.
             </p>
             <ul id="eff-insights" class="insight-list"></ul>
           </div>
@@ -283,7 +323,9 @@
             <p class="method-note">
               해석은 KOBIS 박스오피스·좌석점유율 파일에서 산출한 값만 사용합니다.
               좌석 데이터가 없는 날짜는 효율 평균에서 제외되며, 일부 영화는 좌석 데이터가
-              확보된 날짜를 중심으로 해석해야 합니다.
+              확보된 날짜를 중심으로 해석해야 합니다. TOP10 밖 영화의 전체 상영 기회,
+              시간대별 배정, 배급사·극장 체인별 편성 정보는 이 대시보드에 포함되지
+              않으므로 영화 다양성 훼손의 직접 원인은 별도 자료와 함께 검증해야 합니다.
             </p>
           </article>
         </div>
@@ -317,8 +359,8 @@
       Data source: KOBIS Open API. Static dashboard for GitHub Pages.
     </footer>
 
-    <script src="data/screen_efficiency_indices/screen_efficiency_dashboard_data.js?v=20260527-3"></script>
-    <script src="assets/dashboard.js?v=20260527-3"></script>
-    <script src="assets/screen_efficiency.js?v=20260527-3"></script>
+    <script src="data/screen_efficiency_indices/screen_efficiency_dashboard_data.js?v=20260527-4"></script>
+    <script src="assets/dashboard.js?v=20260527-4"></script>
+    <script src="assets/screen_efficiency.js?v=20260527-4"></script>
   </body>
 </html>

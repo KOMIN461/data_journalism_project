@@ -81,13 +81,13 @@ function renderInsights() {
 
   const items = [
     peak
-      ? `<span class="badge">SS</span><b>${peak.movie_nm}</b>의 최고 스크린 점유율이 <b>${pct(peak.peak_SS_screen_share_pct)}</b>로 가장 높았습니다. 이 시점은 스크린 배정이 특정 영화에 가장 집중된 날입니다.`
+      ? `<span class="badge">SS</span><b>${peak.movie_nm}</b>의 최고 스크린 점유율이 <b>${pct(peak.peak_SS_screen_share_pct)}</b>로 가장 높았습니다. 이 수치는 해당 관측 범위에서 스크린 공급이 가장 크게 집중된 사례입니다.`
       : "",
     efficient
-      ? `<span class="badge">ScEI</span><b>${efficient.movie_nm}</b>은 평균 ScEI가 <b>${ratio(efficient.mean_ScEI_screen_efficiency)}</b>로 높아, 스크린 배정 대비 관객 동원이 상대적으로 강한 편입니다.`
+      ? `<span class="badge">ScEI</span><b>${efficient.movie_nm}</b>은 평균 ScEI가 <b>${ratio(efficient.mean_ScEI_screen_efficiency)}</b>로 높아, 확보한 스크린 비중보다 관객 비중이 상대적으로 크게 나타난 편입니다.`
       : "",
     inefficient
-      ? `<span class="badge">MII</span><b>${inefficient.movie_nm}</b>은 평균 MII가 <b>${pct(inefficient.mean_MII_pct)}</b>로 높아, 스크린 집중과 좌석판매율의 균형을 함께 점검할 필요가 있습니다.`
+      ? `<span class="badge">MII</span><b>${inefficient.movie_nm}</b>은 평균 MII가 <b>${pct(inefficient.mean_MII_pct)}</b>로 높아, 높은 스크린 배정이 좌석 활용으로 충분히 이어졌는지 추가 확인이 필요한 사례입니다.`
       : "",
     lowCoverage
       ? `<span class="badge">자료</span>좌석 데이터 커버리지가 가장 낮은 영화는 <b>${lowCoverage.movie_nm}</b>입니다. 관측일 중 좌석 데이터가 붙은 날은 <b>${(lowCoverage.coverage * 100).toFixed(1)}%</b>입니다.`
@@ -102,15 +102,15 @@ function efficiencyLabel(row) {
   const mii = n(row.mean_MII_pct);
   if (scei === null) return "좌석 데이터가 부족해 효율 판단을 보류해야 합니다.";
   if (scei >= 1.1 && (mii === null || mii < 15)) {
-    return "관객 점유율이 스크린 점유율보다 높아 스크린 배정 대비 관객 효율이 비교적 높은 편입니다.";
+    return "관객 점유율이 스크린 점유율보다 높아, 이 데이터 범위에서는 스크린 배정 대비 관객 반응이 비교적 강하게 나타났습니다.";
   }
   if (scei < 0.8 && mii !== null && mii >= 15) {
-    return "스크린 배정 강도에 비해 관객 효율이 낮고, 좌석 미판매분까지 함께 나타난 구간이 있습니다.";
+    return "스크린 배정 강도에 비해 관객 점유율이 낮고 좌석 미판매분도 함께 관측되어, 공급 대비 수요 균형을 점검할 필요가 있습니다.";
   }
   if (mii !== null && mii >= 20) {
-    return "스크린 집중과 낮은 좌석판매율이 함께 관측되어 좌석 활용 측면의 점검이 필요합니다.";
+    return "스크린 집중과 낮은 좌석판매율이 함께 관측되어, 좌석 활용 측면의 추가 검토가 필요한 사례입니다.";
   }
-  return "스크린 집중과 관객 효율이 중간 수준으로 관측됩니다.";
+  return "스크린 집중과 관객 효율이 중간 수준으로 관측되며, 단독으로 과잉 배정 여부를 판단하기는 어렵습니다.";
 }
 
 function coverageLabel(row) {

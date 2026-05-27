@@ -295,6 +295,25 @@ th {
   padding-left: 12px;
 }
 
+.evidence-list {
+  display: grid;
+  gap: 8px;
+  margin: 0 0 12px;
+  padding-left: 18px;
+  color: #334155;
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+.source-note {
+  margin: 0;
+  border-top: 1px solid #e6edf4;
+  padding-top: 10px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
 .badge {
   display: inline-block;
   margin-right: 6px;
