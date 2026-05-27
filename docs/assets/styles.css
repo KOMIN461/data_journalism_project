@@ -1,0 +1,277 @@
+:root {
+  color-scheme: light;
+  --ink: #172033;
+  --muted: #667085;
+  --line: #dbe3ee;
+  --surface: #ffffff;
+  --wash: #f5f7fb;
+  --accent: #123047;
+  --accent-2: #2563eb;
+  --danger: #e76f51;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--wash);
+  color: var(--ink);
+  font-family:
+    "Malgun Gothic", "Apple SD Gothic Neo", system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", sans-serif;
+}
+
+.site-header {
+  padding: 28px 32px;
+  background: var(--accent);
+  color: white;
+}
+
+.eyebrow {
+  margin: 0 0 6px;
+  color: #a9d6ff;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+h1,
+h2 {
+  margin: 0;
+}
+
+h1 {
+  font-size: 28px;
+  line-height: 1.22;
+}
+
+.lede {
+  max-width: 920px;
+  margin: 8px 0 0;
+  color: #dce9f4;
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+.tabs {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 12px 24px;
+  border-bottom: 1px solid var(--line);
+  background: var(--surface);
+}
+
+.tab {
+  flex: 0 0 auto;
+  border: 1px solid #c7d2df;
+  border-radius: 6px;
+  background: #f8fafc;
+  color: #365064;
+  padding: 9px 13px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.tab.active {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: white;
+}
+
+main {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 22px 24px 38px;
+}
+
+.panel {
+  display: none;
+}
+
+.panel.active {
+  display: block;
+}
+
+.metric-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.metric,
+.card {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+}
+
+.metric {
+  min-height: 92px;
+  padding: 14px;
+}
+
+.metric span {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.metric strong {
+  display: block;
+  margin-top: 8px;
+  font-size: 24px;
+  line-height: 1.25;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 16px;
+}
+
+.card {
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+
+.card-head {
+  border-bottom: 1px solid var(--line);
+  background: #eef3f8;
+  padding: 12px 15px;
+}
+
+.card-head h2 {
+  font-size: 15px;
+}
+
+.chart-wrap {
+  position: relative;
+  height: 360px;
+  padding: 14px;
+}
+
+.chart-wrap.tall {
+  height: 520px;
+}
+
+.toolbar {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(180px, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  padding: 14px;
+}
+
+label {
+  display: grid;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+select,
+input {
+  width: 100%;
+  height: 38px;
+  border: 1px solid #c7d2df;
+  border-radius: 6px;
+  background: white;
+  color: var(--ink);
+  padding: 0 10px;
+  font: inherit;
+  font-size: 13px;
+}
+
+.table-wrap {
+  max-height: 520px;
+  overflow: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+th,
+td {
+  border-bottom: 1px solid #e6edf4;
+  padding: 10px 12px;
+  text-align: left;
+  vertical-align: top;
+}
+
+th {
+  position: sticky;
+  top: 0;
+  background: #f8fafc;
+  color: #475569;
+  font-size: 12px;
+}
+
+.file-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0;
+  padding: 14px;
+  list-style: none;
+}
+
+.file-list a {
+  display: block;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #f8fafc;
+  padding: 10px 12px;
+  color: #1d4f7a;
+  font-size: 13px;
+  font-weight: 800;
+  text-decoration: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.file-list a:hover {
+  background: #e8f2fb;
+}
+
+footer {
+  padding: 18px 24px 32px;
+  color: var(--muted);
+  text-align: center;
+  font-size: 12px;
+}
+
+@media (max-width: 920px) {
+  .site-header {
+    padding: 22px 18px;
+  }
+
+  main {
+    padding: 18px 14px 30px;
+  }
+
+  .metric-grid,
+  .grid,
+  .toolbar,
+  .file-list {
+    grid-template-columns: 1fr;
+  }
+}

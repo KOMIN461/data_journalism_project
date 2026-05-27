@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>KOBIS 스크린 점유율 대시보드</title>
+    <link rel="stylesheet" href="assets/styles.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+  </head>
+  <body>
+    <header class="site-header">
+      <div>
+        <p class="eyebrow">KOBIS Open API Analysis</p>
+        <h1>KOBIS 스크린 점유율 대시보드</h1>
+        <p class="lede">
+          2020년 이후 일별 박스오피스 TOP10의 스크린 수를 바탕으로 영화별 점유율과
+          집중 구간을 살펴봅니다.
+        </p>
+      </div>
+    </header>
+
+    <nav class="tabs" aria-label="대시보드 탭">
+      <button class="tab active" data-panel="overview">요약</button>
+      <button class="tab" data-panel="quarterly">분기별 TOP10</button>
+      <button class="tab" data-panel="single30">단일 영화 30%</button>
+      <button class="tab" data-panel="concentration">집중 구간</button>
+      <button class="tab" data-panel="files">자료</button>
+    </nav>
+
+    <main>
+      <section id="overview" class="panel active">
+        <div class="metric-grid">
+          <article class="metric">
+            <span>30% 이상 발생일수</span>
+            <strong id="kpi-days">-</strong>
+          </article>
+          <article class="metric">
+            <span>30% 이상 영화 수</span>
+            <strong id="kpi-movies">-</strong>
+          </article>
+          <article class="metric">
+            <span>최장 지속 영화</span>
+            <strong id="kpi-longest">-</strong>
+          </article>
+          <article class="metric">
+            <span>최고 점유율</span>
+            <strong id="kpi-peak">-</strong>
+          </article>
+        </div>
+
+        <div class="grid">
+          <article class="card">
+            <div class="card-head">
+              <h2>연도별 단일 영화 30% 이상 발생일수</h2>
+            </div>
+            <div class="chart-wrap">
+              <canvas id="yearlyDaysChart"></canvas>
+            </div>
+          </article>
+          <article class="card">
+            <div class="card-head">
+              <h2>30% 이상 발생일수 TOP 영화</h2>
+            </div>
+            <div class="chart-wrap">
+              <canvas id="topMoviesChart"></canvas>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section id="quarterly" class="panel">
+        <div class="toolbar">
+          <label>
+            연도
+            <select id="quarterYear"></select>
+          </label>
+          <label>
+            분기
+            <select id="quarterSelect"></select>
+          </label>
+        </div>
+        <article class="card">
+          <div class="card-head">
+            <h2>분기별 스크린 점유율 TOP10</h2>
+          </div>
+          <div class="chart-wrap tall">
+            <canvas id="quarterChart"></canvas>
+          </div>
+        </article>
+      </section>
+
+      <section id="single30" class="panel">
+        <div class="toolbar">
+          <label>
+            연도
+            <select id="singleYear"></select>
+          </label>
+          <label>
+            영화 검색
+            <input id="movieSearch" type="search" placeholder="영화명 입력" />
+          </label>
+        </div>
+        <div class="grid">
+          <article class="card">
+            <div class="card-head">
+              <h2>연도별 일일 최고 단일 점유율</h2>
+            </div>
+            <div class="chart-wrap tall">
+              <canvas id="singleTimelineChart"></canvas>
+            </div>
+          </article>
+          <article class="card">
+            <div class="card-head">
+              <h2>30% 이상 연속 기간</h2>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>영화</th>
+                    <th>시작</th>
+                    <th>종료</th>
+                    <th>일수</th>
+                    <th>최고</th>
+                  </tr>
+                </thead>
+                <tbody id="periodTable"></tbody>
+              </table>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section id="concentration" class="panel">
+        <div class="toolbar">
+          <label>
+            기준
+            <select id="concentrationThreshold">
+              <option value="all">전체</option>
+              <option value="60% 이상">60% 이상</option>
+              <option value="70% 이상">70% 이상</option>
+            </select>
+          </label>
+        </div>
+        <article class="card">
+          <div class="card-head">
+            <h2>상위 1~3개 영화 합산 집중 기간</h2>
+          </div>
+          <div class="chart-wrap tall">
+            <canvas id="concentrationChart"></canvas>
+          </div>
+        </article>
+      </section>
+
+      <section id="files" class="panel">
+        <article class="card">
+          <div class="card-head">
+            <h2>CSV 자료</h2>
+          </div>
+          <ul class="file-list">
+            <li><a href="data/daily_top10_screen_share.csv">daily_top10_screen_share.csv</a></li>
+            <li><a href="data/quarterly_top10.csv">quarterly_top10.csv</a></li>
+            <li><a href="data/single_40_50_daily.csv">single_40_50_daily.csv</a></li>
+            <li><a href="data/single_40_50_periods.csv">single_40_50_periods.csv</a></li>
+            <li><a href="data/group_60_70_daily.csv">group_60_70_daily.csv</a></li>
+            <li><a href="data/group_60_70_periods.csv">group_60_70_periods.csv</a></li>
+            <li><a href="data/single_movie_over_30_daily_events.csv">single_movie_over_30_daily_events.csv</a></li>
+            <li><a href="data/single_movie_over_30_daily_summary.csv">single_movie_over_30_daily_summary.csv</a></li>
+            <li><a href="data/single_movie_over_30_movie_summary.csv">single_movie_over_30_movie_summary.csv</a></li>
+            <li><a href="data/single_movie_over_30_periods.csv">single_movie_over_30_periods.csv</a></li>
+            <li><a href="data/single_movie_over_30_year_summary.csv">single_movie_over_30_year_summary.csv</a></li>
+          </ul>
+        </article>
+      </section>
+    </main>
+
+    <footer>
+      Data source: KOBIS Open API. Static dashboard for GitHub Pages.
+    </footer>
+
+    <script src="assets/dashboard.js"></script>
+  </body>
+</html>
