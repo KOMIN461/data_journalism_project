@@ -1,3 +1,4 @@
+(() => {
 const effState = {
   charts: {},
   daily: screenEfficiencyDashboardData.daily || [],
@@ -277,7 +278,11 @@ function renderSummaryTable() {
     .join("");
 }
 
+let booted = false;
+
 function boot() {
+  if (booted) return;
+  booted = true;
   renderKpis();
   renderInsights();
   renderEfficiencyBar();
@@ -286,4 +291,12 @@ function boot() {
   initMovieSelect();
 }
 
-boot();
+const efficiencyTab = document.querySelector('[data-panel="efficiency"]');
+if (efficiencyTab) {
+  efficiencyTab.addEventListener("click", () => {
+    window.setTimeout(boot, 0);
+  });
+} else {
+  boot();
+}
+})();
