@@ -78,6 +78,17 @@ function formatDays(value) {
   return `${Math.round(number(value)).toLocaleString("ko-KR")}일`;
 }
 
+function shortList(names, limit = 3) {
+  const picked = names.filter(Boolean).slice(0, limit);
+  return picked.join(", ");
+}
+
+function setInsightList(id, items) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.innerHTML = items.filter(Boolean).map((item) => `<li>${item}</li>`).join("");
+}
+
 function hashColor(text) {
   let hash = 0;
   for (let i = 0; i < text.length; i += 1) {
@@ -201,8 +212,12 @@ function initQuarterControls() {
   document.getElementById("quarterYear").addEventListener("change", () => {
     updateQuarterOptions();
     renderQuarterChart();
+    renderQuarterInsight();
   });
-  document.getElementById("quarterSelect").addEventListener("change", renderQuarterChart);
+  document.getElementById("quarterSelect").addEventListener("change", () => {
+    renderQuarterChart();
+    renderQuarterInsight();
+  });
 }
 
 function updateQuarterOptions() {
@@ -254,14 +269,39 @@ function renderQuarterChart() {
   });
 }
 
+function renderQuarterInsight() {
+  const quarter = document.getElementById("quarterSelect").value;
+  const rows = state.data.quarterly
+    .filter((row) => row.quarter === quarter)
+    .sort((a, b) => number(b.quarter_screen_share) - number(a.quarter_screen_share));
+  const top = rows[0];
+  const top3 = rows.slice(0, 3);
+  const top3Share = top3.reduce((sum, row) => sum + number(row.quarter_screen_share), 0);
+  const active = top ? `${Math.round(number(top.active_days)).toLocaleString("ko-KR")}일` : "-";
+
+  setInsightList("quarterInsight", [
+    top
+      ? `<span class="badge">1위</span>${quarter} 누적 기준 <b>${top.movie_nm}</b>이 <b>${formatPercent(top.quarter_screen_share)}</b>로 가장 높은 스크린 비중을 보였습니다. 관측일은 ${active}입니다.`
+      : "",
+    top3.length
+      ? `<span class="badge">상위권</span>상위 3편(${shortList(top3.map((row) => row.movie_nm))})의 합산 비중은 <b>${formatPercent(top3Share)}</b>입니다. 이는 해당 분기 스크린 배정이 상위 영화에 얼마나 집중됐는지 보여주는 보조 지표입니다.`
+      : "",
+    `<span class="badge">주의</span>이 값은 분기 전체 3개월의 누적 스크린 비중입니다. 하루 최고 점유율이 아니라 장기간 배정 결과이므로, 개봉일 효과와 상영 지속 기간을 함께 고려해야 합니다.`,
+  ]);
+}
+
 function initSingleControls() {
   const years = [...new Set(state.data.daily30.map((row) => row.year))].sort();
   setOptions(document.getElementById("singleYear"), years);
   document.getElementById("singleYear").addEventListener("change", () => {
     renderSingleTimeline();
     renderPeriodTable();
+    renderSingleInsight();
   });
-  document.getElementById("movieSearch").addEventListener("input", renderPeriodTable);
+  document.getElementById("movieSearch").addEventListener("input", () => {
+    renderPeriodTable();
+    renderSingleInsight();
+  });
 }
 
 function renderSingleTimeline() {
@@ -335,6 +375,30 @@ function renderPeriodTable() {
     .join("");
 }
 
+function renderSingleInsight() {
+  const year = document.getElementById("singleYear").value;
+  const query = document.getElementById("movieSearch").value.trim().toLowerCase();
+  const yearRow = state.data.yearly30.find((row) => String(row.year) === String(year));
+  const periods = state.data.periods30
+    .filter((row) => row.start_date.startsWith(year) || row.end_date.startsWith(year))
+    .filter((row) => !query || row.movie_nm.toLowerCase().includes(query))
+    .sort((a, b) => number(b.days) - number(a.days));
+  const longest = periods[0];
+  const peak = periods.slice().sort((a, b) => number(b.max_share) - number(a.max_share))[0];
+
+  setInsightList("singleInsight", [
+    yearRow
+      ? `<span class="badge">빈도</span>${year}년에 단일 영화가 30% 이상을 기록한 날은 <b>${formatDays(yearRow.days_with_any_movie_over_threshold)}</b>입니다. 해당 연도 최고 단일 점유율은 <b>${formatPercent(yearRow.max_single_share)}</b>입니다.`
+      : "",
+    longest
+      ? `<span class="badge">지속</span>가장 긴 연속 구간은 <b>${longest.movie_nm}</b>의 ${longest.start_date}~${longest.end_date}이며, <b>${formatDays(longest.days)}</b> 동안 30% 이상이 이어졌습니다.`
+      : "",
+    peak
+      ? `<span class="badge">정점</span>표시된 기간 중 최고 점유율은 <b>${peak.movie_nm}</b>의 <b>${formatPercent(peak.max_share)}</b>입니다. 이 수치는 특정 시점에 한 영화의 스크린 노출이 얼마나 컸는지 보여줍니다.`
+      : "",
+  ]);
+}
+
 function initConcentrationControls() {
   const years = [
     ...new Set(
@@ -347,10 +411,16 @@ function initConcentrationControls() {
   setOptions(document.getElementById("concentrationYear"), years);
   document
     .getElementById("concentrationYear")
-    .addEventListener("change", renderConcentrationChart);
+    .addEventListener("change", () => {
+      renderConcentrationChart();
+      renderConcentrationInsight();
+    });
   document
     .getElementById("concentrationThreshold")
-    .addEventListener("change", renderConcentrationChart);
+    .addEventListener("change", () => {
+      renderConcentrationChart();
+      renderConcentrationInsight();
+    });
 }
 
 function periodIntersectsYear(row, year) {
@@ -451,6 +521,30 @@ function renderConcentrationChart() {
   });
 }
 
+function renderConcentrationInsight() {
+  const year = document.getElementById("concentrationYear").value;
+  const threshold = document.getElementById("concentrationThreshold").value;
+  const rows = state.data.concentration
+    .filter((row) => periodIntersectsYear(row, year))
+    .filter((row) => threshold === "all" || row.threshold === threshold);
+  const totalDays = rows.reduce((sum, row) => sum + number(row.days), 0);
+  const longest = rows.slice().sort((a, b) => number(b.days) - number(a.days))[0];
+  const peak = rows.slice().sort((a, b) => number(b.max_share) - number(a.max_share))[0];
+  const label = threshold === "all" ? "60%·70%" : threshold;
+
+  setInsightList("concentrationInsight", [
+    rows.length
+      ? `<span class="badge">기간</span>${year}년과 겹치는 선택 기준(${label}) 집중 구간은 <b>${rows.length.toLocaleString("ko-KR")}개</b>입니다. 구간 전체 일수의 단순 합계는 <b>${formatDays(totalDays)}</b>이며, 전체 기준 선택 시 60%와 70% 구간이 중복될 수 있습니다.`
+      : `<span class="badge">기간</span>${year}년에 선택 기준(${label})에 해당하는 집중 구간이 없습니다.`,
+    longest
+      ? `<span class="badge">최장</span>가장 긴 구간은 ${longest.start_date}~${longest.end_date}의 <b>${formatDays(longest.days)}</b>이며, 대표 조합은 <b>${longest.representative_movies}</b>입니다.`
+      : "",
+    peak
+      ? `<span class="badge">최고</span>가장 높은 합산 점유율은 <b>${formatPercent(peak.max_share)}</b>입니다. 상위 소수 영화의 스크린 노출이 특히 크게 나타난 시점으로 해석할 수 있습니다.`
+      : "",
+  ]);
+}
+
 async function init() {
   activateTabs();
   const entries = await Promise.all(
@@ -463,11 +557,14 @@ async function init() {
   renderTopMoviesChart();
   initQuarterControls();
   renderQuarterChart();
+  renderQuarterInsight();
   initSingleControls();
   renderSingleTimeline();
   renderPeriodTable();
+  renderSingleInsight();
   initConcentrationControls();
   renderConcentrationChart();
+  renderConcentrationInsight();
 }
 
 init().catch((error) => {

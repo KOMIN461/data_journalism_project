@@ -30,6 +30,10 @@ function ratio(value, digits = 2) {
   return parsed === null ? "-" : parsed.toFixed(digits);
 }
 
+function metricRatio(row, key) {
+  return ratio(row[key]);
+}
+
 function shortName(name) {
   return String(name || "").replace("미션 임파서블: 데드 레코닝 PART ONE", "미션 임파서블").replace("블랙 팬서: 와칸다 포에버", "블랙 팬서");
 }
@@ -72,6 +76,15 @@ function renderInsights() {
     (a, b) => n(b.mean_ScEI_screen_efficiency) - n(a.mean_ScEI_screen_efficiency),
   )[0];
   const inefficient = validRows(summary, "mean_MII_pct").sort((a, b) => n(b.mean_MII_pct) - n(a.mean_MII_pct))[0];
+  const audienceStronger = summary.filter((row) => {
+    const ss = n(row.mean_SS_screen_share_pct);
+    const aud = n(row.mean_audience_share_pct);
+    return ss !== null && aud !== null && aud > ss;
+  });
+  const highMii = summary.filter((row) => {
+    const mii = n(row.mean_MII_pct);
+    return mii !== null && mii >= 20;
+  });
   const lowCoverage = summary
     .map((row) => ({
       ...row,
@@ -89,6 +102,12 @@ function renderInsights() {
     inefficient
       ? `<span class="badge">MII</span><b>${inefficient.movie_nm}</b>은 평균 MII가 <b>${pct(inefficient.mean_MII_pct)}</b>로 높아, 높은 스크린 배정이 좌석 활용으로 충분히 이어졌는지 추가 확인이 필요한 사례입니다.`
       : "",
+    summary.length
+      ? `<span class="badge">판단</span>분석 영화 ${summary.length}편 중 <b>${audienceStronger.length}편</b>은 평균 관객 점유율이 평균 스크린 점유율보다 높았습니다. 이 경우 스크린 배정이 관객 반응 대비 과도했다고 단정하기 어렵습니다.`
+      : "",
+    highMii.length
+      ? `<span class="badge">좌석</span>다만 <b>${highMii.length}편</b>은 평균 MII가 20% 이상으로 나타났습니다. 관객 점유율은 높더라도 좌석판매율까지 보면 좌석 활용 효율을 따로 점검해야 합니다.`
+      : "",
     lowCoverage
       ? `<span class="badge">자료</span>좌석 데이터 커버리지가 가장 낮은 영화는 <b>${lowCoverage.movie_nm}</b>입니다. 관측일 중 좌석 데이터가 붙은 날은 <b>${(lowCoverage.coverage * 100).toFixed(1)}%</b>입니다.`
       : "",
@@ -99,12 +118,16 @@ function renderInsights() {
 
 function efficiencyLabel(row) {
   const scei = n(row.mean_ScEI_screen_efficiency);
+  const scoi = n(row.mean_ScOI_screen_overallocation);
   const mii = n(row.mean_MII_pct);
   if (scei === null) return "좌석 데이터가 부족해 효율 판단을 보류해야 합니다.";
-  if (scei >= 1.1 && (mii === null || mii < 15)) {
-    return "관객 점유율이 스크린 점유율보다 높아, 이 데이터 범위에서는 스크린 배정 대비 관객 반응이 비교적 강하게 나타났습니다.";
+  if (scei >= 1.1 && (scoi === null || scoi <= 0.9)) {
+    if (mii !== null && mii >= 20) {
+      return "관객 점유율이 스크린 점유율보다 높아 스크린 배정 자체를 과도하다고 단정하기는 어렵습니다. 다만 좌석판매율을 반영한 MII가 높아 좌석 활용 효율은 추가 점검이 필요합니다.";
+    }
+    return "관객 점유율이 스크린 점유율보다 높아, 이 데이터 범위에서는 스크린 배정 대비 관객 반응이 더 강하게 나타났습니다.";
   }
-  if (scei < 0.8 && mii !== null && mii >= 15) {
+  if (scei < 0.8 || (scoi !== null && scoi >= 1.25)) {
     return "스크린 배정 강도에 비해 관객 점유율이 낮고 좌석 미판매분도 함께 관측되어, 공급 대비 수요 균형을 점검할 필요가 있습니다.";
   }
   if (mii !== null && mii >= 20) {
@@ -120,6 +143,28 @@ function coverageLabel(row) {
   if (coverage < 30) return `좌석 데이터 커버리지는 ${coverage.toFixed(1)}%로 낮아 해석에 주의가 필요합니다.`;
   if (coverage < 60) return `좌석 데이터 커버리지는 ${coverage.toFixed(1)}%로 일부 기간 중심의 해석입니다.`;
   return `좌석 데이터 커버리지는 ${coverage.toFixed(1)}%입니다.`;
+}
+
+function allocationSentence(row) {
+  const ss = n(row.mean_SS_screen_share_pct);
+  const aud = n(row.mean_audience_share_pct);
+  const scei = n(row.mean_ScEI_screen_efficiency);
+  const scoi = n(row.mean_ScOI_screen_overallocation);
+  const mii = n(row.mean_MII_pct);
+
+  if (ss === null || aud === null) {
+    return "스크린 점유율과 관객 점유율을 직접 비교할 데이터가 부족합니다.";
+  }
+  if (aud > ss) {
+    const gap = aud - ss;
+    const tail =
+      mii !== null && mii >= 20
+        ? "다만 좌석판매율까지 반영한 MII가 높아, 좌석 활용 효율은 따로 점검해야 합니다."
+        : "따라서 이 데이터만으로는 스크린 배정이 과도했다고 보기 어렵습니다.";
+    return `평균 관객 점유율(${pct(aud)})이 평균 스크린 점유율(${pct(ss)})보다 ${pct(gap)}p 높습니다. ScEI는 ${ratio(scei)}, ScOI는 ${ratio(scoi)}로 나타나 스크린 배정 대비 관객 반응이 더 강한 편입니다. ${tail}`;
+  }
+  const gap = ss - aud;
+  return `평균 스크린 점유율(${pct(ss)})이 평균 관객 점유율(${pct(aud)})보다 ${pct(gap)}p 높습니다. ScEI는 ${ratio(scei)}, ScOI는 ${ratio(scoi)}로 나타나 스크린 배정이 관객 반응보다 앞섰을 가능성이 있습니다.`;
 }
 
 function renderMovieDetail(movie) {
@@ -138,7 +183,11 @@ function renderMovieDetail(movie) {
   container.innerHTML = `
     <h3>${row.movie_nm}</h3>
     <div class="detail-grid">
-      <div><span>최고 SS</span><b>${pct(row.peak_SS_screen_share_pct)}</b></div>
+      <div><span>평균 SS</span><b>${pct(row.mean_SS_screen_share_pct)}</b></div>
+      <div><span>평균 SOI</span><b>${metricRatio(row, "mean_SOI_seat_overallocation")}</b></div>
+      <div><span>평균 ScOI</span><b>${metricRatio(row, "mean_ScOI_screen_overallocation")}</b></div>
+      <div><span>평균 ShOI</span><b>${metricRatio(row, "mean_ShOI_show_overallocation")}</b></div>
+      <div><span>평균 StEI</span><b>${metricRatio(row, "mean_StEI_seat_efficiency")}</b></div>
       <div><span>최고일</span><b>${row.peak_screen_share_date || "-"}</b></div>
       <div><span>평균 ScEI</span><b>${ratio(row.mean_ScEI_screen_efficiency)}</b></div>
       <div><span>평균 MII</span><b>${pct(row.mean_MII_pct)}</b></div>
@@ -146,6 +195,7 @@ function renderMovieDetail(movie) {
       <div><span>좌석 데이터</span><b>${count(row.seat_data_days)}일</b></div>
     </div>
     <p><b>30% 초과 구간:</b> ${period}</p>
+    <p><b>스크린 배정 판단:</b> ${allocationSentence(row)}</p>
     <p><b>객관적 해석:</b> ${efficiencyLabel(row)}</p>
     <p><b>자료 신뢰도:</b> ${coverageLabel(row)} 이 평가는 KOBIS 기반 산출 데이터에 한정하며, 좌석 데이터가 없는 날짜는 효율 지표에 반영되지 않습니다.</p>
   `;
@@ -233,10 +283,12 @@ function initMovieSelect() {
   select.addEventListener("change", () => {
     renderMovieDetail(select.value);
     renderDailyChart(select.value);
+    renderDailyMetricTable(select.value);
   });
   const initialMovie = select.value || effState.summary[0]?.movie_nm;
   renderMovieDetail(initialMovie);
   renderDailyChart(initialMovie);
+  renderDailyMetricTable(initialMovie);
 }
 
 function renderDailyChart(movie) {
@@ -261,6 +313,36 @@ function renderDailyChart(movie) {
   });
 }
 
+function renderDailyMetricTable(movie) {
+  const body = document.getElementById("effDailyMetricTable");
+  if (!body) return;
+  const rows = effState.daily
+    .filter((row) => row.movie_nm === movie && row.has_seat_data)
+    .sort((a, b) => String(a.date).localeCompare(String(b.date)));
+
+  if (!rows.length) {
+    body.innerHTML = `<tr><td colspan="8">좌석 데이터가 연결된 일별 지표가 없습니다.</td></tr>`;
+    return;
+  }
+
+  body.innerHTML = rows
+    .map(
+      (row) => `
+        <tr>
+          <td>${row.date || "-"}</td>
+          <td>${pct(row.SS_screen_share_pct)}</td>
+          <td>${ratio(row.SOI_seat_overallocation)}</td>
+          <td>${ratio(row.ScOI_screen_overallocation)}</td>
+          <td>${ratio(row.ShOI_show_overallocation)}</td>
+          <td>${ratio(row.StEI_seat_efficiency)}</td>
+          <td>${ratio(row.ScEI_screen_efficiency)}</td>
+          <td>${pct(row.MII_pct)}</td>
+        </tr>
+      `,
+    )
+    .join("");
+}
+
 function renderSummaryTable() {
   const rows = [...effState.summary].sort((a, b) => n(b.peak_SS_screen_share_pct) - n(a.peak_SS_screen_share_pct));
   document.getElementById("effSummaryTable").innerHTML = rows
@@ -268,7 +350,11 @@ function renderSummaryTable() {
       (row) => `
         <tr>
           <td>${row.movie_nm}</td>
-          <td>${pct(row.peak_SS_screen_share_pct)}</td>
+          <td>${pct(row.mean_SS_screen_share_pct)}</td>
+          <td>${ratio(row.mean_SOI_seat_overallocation)}</td>
+          <td>${ratio(row.mean_ScOI_screen_overallocation)}</td>
+          <td>${ratio(row.mean_ShOI_show_overallocation)}</td>
+          <td>${ratio(row.mean_StEI_seat_efficiency)}</td>
           <td>${ratio(row.mean_ScEI_screen_efficiency)}</td>
           <td>${pct(row.mean_MII_pct)}</td>
           <td>${row.interpretation || "-"}</td>

@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>KOBIS 스크린 점유율 대시보드</title>
-    <link rel="stylesheet" href="assets/styles.css?v=20260527-4" />
+    <link rel="stylesheet" href="assets/styles.css?v=20260528-2" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
   </head>
   <body>
@@ -118,6 +118,21 @@
             <select id="quarterSelect"></select>
           </label>
         </div>
+        <article class="analysis-block">
+          <div>
+            <p class="eyebrow">Article Note</p>
+            <h2>분기별 누적 스크린 배정 읽기</h2>
+          </div>
+          <div>
+            <p class="analysis-copy">
+              분기별 TOP10은 하루 단위 최고치가 아니라, 해당 3개월 동안 누적된 스크린
+              배정 비중입니다. 특정 영화가 분기 전체에서 높은 비중을 차지했다면, 개봉
+              직후 며칠의 집중을 넘어 그 분기 극장 공급에서 지속적으로 큰 위치를 차지한
+              것으로 해석할 수 있습니다.
+            </p>
+            <ul id="quarterInsight" class="insight-list"></ul>
+          </div>
+        </article>
         <article class="card">
           <div class="card-head">
             <h2>분기별 스크린 점유율 TOP10</h2>
@@ -139,6 +154,21 @@
             <input id="movieSearch" type="search" placeholder="영화명 입력" />
           </label>
         </div>
+        <article class="analysis-block">
+          <div>
+            <p class="eyebrow">Article Note</p>
+            <h2>단일 영화 30% 기준의 의미</h2>
+          </div>
+          <div>
+            <p class="analysis-copy">
+              단일 영화가 하루 스크린의 30% 이상을 차지했다는 것은 관객이 극장에서
+              마주하는 스크린 노출 중 한 작품의 비중이 커졌다는 뜻입니다. 이 지표는
+              특정 영화의 흥행을 비판하기 위한 값이 아니라, 개봉 시기별 공급 집중이
+              얼마나 자주, 얼마나 오래 지속됐는지를 확인하는 기준입니다.
+            </p>
+            <ul id="singleInsight" class="insight-list"></ul>
+          </div>
+        </article>
         <div class="grid">
           <article class="card">
             <div class="card-head">
@@ -185,6 +215,20 @@
             </select>
           </label>
         </div>
+        <article class="analysis-block">
+          <div>
+            <p class="eyebrow">Article Note</p>
+            <h2>상위 1~3개 영화 합산 집중 구간</h2>
+          </div>
+          <div>
+            <p class="analysis-copy">
+              집중 구간은 한 편의 독주뿐 아니라 상위 소수 영화가 함께 스크린을 크게
+              점유한 기간을 보여줍니다. 60% 이상은 스크린 노출이 상위권 영화 중심으로
+              강하게 모인 구간, 70% 이상은 그 집중도가 더 강한 구간으로 읽을 수 있습니다.
+            </p>
+            <ul id="concentrationInsight" class="insight-list"></ul>
+          </div>
+        </article>
         <article class="card">
           <div class="card-head">
             <h2>연도별 상위 1~3개 영화 합산 집중 기간</h2>
@@ -241,7 +285,11 @@
               사실 자체를 곧바로 문제로 판단하지 않고, 그 배정이 실제 관객 수요와 좌석
               활용으로 얼마나 이어졌는지를 보조 지표로 확인합니다. 이 지표는 스크린
               독과점 여부를 단정하기 위한 값이 아니라, 스크린 집중이 관객 반응과 어느
-              정도 균형을 이루었는지 점검하기 위한 해석 도구입니다.
+              정도 균형을 이루었는지 점검하기 위한 해석 도구입니다. 특히 ScEI가 1보다
+              크면 스크린 점유율보다 관객 점유율이 높았다는 뜻이므로, 해당 영화의
+              스크린 배정이 관객 반응 대비 과도했다고 단정하기 어렵습니다. 반대로 MII가
+              높으면 좌석판매율까지 고려했을 때 좌석 활용 효율을 추가로 점검할 필요가
+              있습니다.
             </p>
             <ul id="eff-insights" class="insight-list"></ul>
           </div>
@@ -290,6 +338,29 @@
           </article>
         </div>
 
+        <article class="card">
+          <div class="card-head">
+            <h2>선택 영화 일별 지표 표</h2>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>날짜</th>
+                  <th>SS</th>
+                  <th>SOI</th>
+                  <th>ScOI</th>
+                  <th>ShOI</th>
+                  <th>StEI</th>
+                  <th>ScEI</th>
+                  <th>MII</th>
+                </tr>
+              </thead>
+              <tbody id="effDailyMetricTable"></tbody>
+            </table>
+          </div>
+        </article>
+
         <div class="grid">
           <article class="card">
             <div class="card-head">
@@ -300,9 +371,13 @@
                 <thead>
                   <tr>
                     <th>영화</th>
-                    <th>최고 SS</th>
-                    <th>평균 ScEI</th>
-                    <th>평균 MII</th>
+                    <th>SS</th>
+                    <th>SOI</th>
+                    <th>ScOI</th>
+                    <th>ShOI</th>
+                    <th>StEI</th>
+                    <th>ScEI</th>
+                    <th>MII</th>
                     <th>해석</th>
                   </tr>
                 </thead>
@@ -316,8 +391,11 @@
             </div>
             <div class="definition-grid">
               <div><b>SS</b><span>스크린 점유율. 특정 영화가 당일 스크린 배정에서 차지한 비율입니다.</span></div>
-              <div><b>ScEI</b><span>관객 점유율 / 스크린 점유율. 1보다 크면 스크린 배정 대비 관객 효율이 높습니다.</span></div>
               <div><b>SOI</b><span>좌석 점유율 / 관객 점유율. 1보다 크면 관객 비중보다 좌석 배정 비중이 큽니다.</span></div>
+              <div><b>ScOI</b><span>스크린 점유율 / 관객 점유율. 1보다 크면 관객 비중보다 스크린 배정 비중이 큽니다.</span></div>
+              <div><b>ShOI</b><span>상영 점유율 / 관객 점유율. 이 대시보드에서는 일별 TOP10 안에서의 상영 비중과 관객 비중을 비교합니다.</span></div>
+              <div><b>StEI</b><span>관객 점유율 / 좌석 점유율. 1보다 크면 좌석 배정 대비 관객 효율이 높습니다.</span></div>
+              <div><b>ScEI</b><span>관객 점유율 / 스크린 점유율. 1보다 크면 스크린 배정 대비 관객 효율이 높습니다.</span></div>
               <div><b>MII</b><span>스크린 점유율 × (1 - 좌석판매율). 스크린 집중과 낮은 좌석 활용이 겹치는 정도입니다.</span></div>
             </div>
             <p class="method-note">
@@ -326,6 +404,10 @@
               확보된 날짜를 중심으로 해석해야 합니다. TOP10 밖 영화의 전체 상영 기회,
               시간대별 배정, 배급사·극장 체인별 편성 정보는 이 대시보드에 포함되지
               않으므로 영화 다양성 훼손의 직접 원인은 별도 자료와 함께 검증해야 합니다.
+              ShOI는 daily_top10_screen_share.csv의 TOP10 영화 안에서 계산한 상영 과대배정
+              지표입니다. 다만 SOI·ScOI·StEI·ScEI와 나란히 비교할 수 있도록 좌석점유율
+              XLS가 연결된 날짜에 한해 표시·요약합니다. 지표 간 비교에서는 기준 데이터의
+              차이를 함께 보아야 합니다.
             </p>
           </article>
         </div>
@@ -359,8 +441,8 @@
       Data source: KOBIS Open API. Static dashboard for GitHub Pages.
     </footer>
 
-    <script src="data/screen_efficiency_indices/screen_efficiency_dashboard_data.js?v=20260527-4"></script>
-    <script src="assets/dashboard.js?v=20260527-4"></script>
-    <script src="assets/screen_efficiency.js?v=20260527-4"></script>
+    <script src="data/screen_efficiency_indices/screen_efficiency_dashboard_data.js?v=20260528-2"></script>
+    <script src="assets/dashboard.js?v=20260528-2"></script>
+    <script src="assets/screen_efficiency.js?v=20260528-2"></script>
   </body>
 </html>
