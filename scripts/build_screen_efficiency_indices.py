@@ -18,6 +18,7 @@ The formulas follow the attached dashboard's naming:
 - SS: screen share
 - SOI: seat share / audience share
 - ScOI: screen share / audience share
+- ShOI: show share / audience share
 - StEI: audience share / seat share
 - ScEI: audience share / screen share
 - MII: screen share * (1 - seat sales rate)
@@ -241,6 +242,36 @@ def load_screen_daily(screen_daily_csv: Path) -> pd.DataFrame:
     df["scrn_cnt"] = df["screen_count"].map(parse_number)
     df["show_cnt"] = df["show_count"].map(parse_number)
     df["screen_audi_cnt"] = df["audience_cnt"].map(parse_number)
+    # daily_top10_screen_share.csv contains only the daily box-office TOP10 rows.
+    # ShOI therefore uses a TOP10-within-day denominator for both show share and
+    # audience share, rather than mixing this with the KOBIS XLS seat-file market.
+    totals = (
+        df.groupby("date", as_index=False)
+        .agg(
+            total_show_cnt=("show_cnt", "sum"),
+            total_screen_audi_cnt=("screen_audi_cnt", "sum"),
+        )
+    )
+    df = df.merge(totals, on="date", how="left")
+    df["show_share_pct"] = (
+        df["show_cnt"] / df["total_show_cnt"].replace(0, float("nan")) * 100
+    )
+    df["top10_audience_share_pct"] = (
+        df["screen_audi_cnt"] / df["total_screen_audi_cnt"].replace(0, float("nan")) * 100
+    )
+    available_top10_share_check = df.groupby("date").agg(
+        sum_show_share=("show_share_pct", "sum"),
+        sum_top10_audience_share=("top10_audience_share_pct", "sum"),
+    )
+    off_base = available_top10_share_check[
+        (available_top10_share_check["sum_show_share"].sub(100).abs() > 0.01)
+        | (available_top10_share_check["sum_top10_audience_share"].sub(100).abs() > 0.01)
+    ]
+    if not off_base.empty:
+        print(
+            "[주의] daily_top10_screen_share.csv의 날짜별 수록 행 기준 상영/관객 "
+            f"점유율 합계가 100%에서 벗어난 날짜가 있습니다: {len(off_base)}일"
+        )
     keep = [
         "date",
         "movie_nm",
@@ -248,6 +279,10 @@ def load_screen_daily(screen_daily_csv: Path) -> pd.DataFrame:
         "rank",
         "scrn_cnt",
         "show_cnt",
+        "total_show_cnt",
+        "total_screen_audi_cnt",
+        "show_share_pct",
+        "top10_audience_share_pct",
         "screen_audi_cnt",
         "SS_screen_share_pct",
     ]
@@ -421,6 +456,8 @@ def build_daily_indices(
 
     for source_col, new_col in [
         ("SS_screen_share_pct", "screen_share"),
+        ("show_share_pct", "show_share"),
+        ("top10_audience_share_pct", "top10_audience_share"),
         ("seat_share_pct", "seat_share"),
         ("audience_share_pct", "audience_share"),
         ("seat_sales_rate_pct", "seat_sales_rate"),
@@ -433,9 +470,12 @@ def build_daily_indices(
     seat_s = merged["seat_share"].replace(0, float("nan"))
     audience_s = merged["audience_share"].replace(0, float("nan"))
     screen_s = merged["screen_share"].replace(0, float("nan"))
+    show_s = merged["show_share"].replace(0, float("nan"))
+    top10_audience_s = merged["top10_audience_share"].replace(0, float("nan"))
 
     merged["SOI_seat_overallocation"] = seat_s / audience_s
     merged["ScOI_screen_overallocation"] = screen_s / audience_s
+    merged["ShOI_show_overallocation"] = show_s / top10_audience_s
     merged["StEI_seat_efficiency"] = audience_s / seat_s
     merged["ScEI_screen_efficiency"] = audience_s / screen_s
     merged["MII"] = merged["screen_share"] * (1 - merged["seat_sales_rate"])
@@ -445,6 +485,11 @@ def build_daily_indices(
     )
     merged["seat_minus_audience_share_p"] = merged["seat_share_pct"] - merged["audience_share_pct"]
     merged["has_seat_data"] = merged["seat_share_pct"].notna()
+    # Keep ShOI on the same displayed coverage as the other efficiency indices.
+    # Its raw components are available without the seat XLS, but cross-index
+    # comparison is clearer when no-seat-data dates remain empty. If the
+    # has_seat_data definition changes, review this mask at the same time.
+    merged.loc[~merged["has_seat_data"], "ShOI_show_overallocation"] = float("nan")
 
     merged = attach_period_flags(merged, top10_df)
     return merged.sort_values(["movie_nm", "date"]).reset_index(drop=True)
@@ -497,17 +542,23 @@ def summarize_movies(daily: pd.DataFrame, top10_df: pd.DataFrame) -> pd.DataFram
                 "peak_SS_screen_share_pct": peak["SS_screen_share_pct"],
                 "peak_seat_share_pct": peak.get("seat_share_pct", math.nan),
                 "peak_audience_share_pct": peak.get("audience_share_pct", math.nan),
+                "peak_show_share_pct": peak.get("show_share_pct", math.nan),
+                "peak_top10_audience_share_pct": peak.get("top10_audience_share_pct", math.nan),
                 "peak_seat_sales_rate_pct": peak.get("seat_sales_rate_pct", math.nan),
                 "peak_ScEI_screen_efficiency": peak.get("ScEI_screen_efficiency", math.nan),
+                "peak_ShOI_show_overallocation": peak.get("ShOI_show_overallocation", math.nan),
                 "peak_MII_pct": peak.get("MII_pct", math.nan),
                 "max_MII_date": mii_peak["date"] if mii_peak is not None else pd.NaT,
                 "max_MII_pct": mii_peak.get("MII_pct", math.nan) if mii_peak is not None else math.nan,
                 "mean_SS_screen_share_pct": col_mean(analysis_rows, "SS_screen_share_pct"),
+                "mean_show_share_pct": col_mean(analysis_rows, "show_share_pct"),
+                "mean_top10_audience_share_pct": col_mean(analysis_rows, "top10_audience_share_pct"),
                 "mean_seat_share_pct": col_mean(analysis_rows, "seat_share_pct"),
                 "mean_audience_share_pct": col_mean(analysis_rows, "audience_share_pct"),
                 "mean_seat_sales_rate_pct": col_mean(analysis_rows, "seat_sales_rate_pct"),
                 "mean_SOI_seat_overallocation": col_mean(analysis_rows, "SOI_seat_overallocation"),
                 "mean_ScOI_screen_overallocation": col_mean(analysis_rows, "ScOI_screen_overallocation"),
+                "mean_ShOI_show_overallocation": col_mean(analysis_rows, "ShOI_show_overallocation"),
                 "mean_StEI_seat_efficiency": col_mean(analysis_rows, "StEI_seat_efficiency"),
                 "mean_ScEI_screen_efficiency": col_mean(analysis_rows, "ScEI_screen_efficiency"),
                 "mean_MII_pct": col_mean(analysis_rows, "MII_pct"),
@@ -578,7 +629,7 @@ def save_outputs(daily: pd.DataFrame, summary: pd.DataFrame, output_dir: Path) -
     }
     js_text = "const screenEfficiencyDashboardData = "
     js_text += json.dumps(payload, ensure_ascii=False, indent=2)
-    js_text += ";\n"
+    js_text += ";\nwindow.screenEfficiencyDashboardData = screenEfficiencyDashboardData;\n"
     js_out.write_text(js_text, encoding="utf-8")
 
     print(f"[완료] daily CSV: {daily_out}")

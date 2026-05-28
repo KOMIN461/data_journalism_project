@@ -1,8 +1,12 @@
 (() => {
+const dashboardData =
+  window.screenEfficiencyDashboardData ||
+  (typeof screenEfficiencyDashboardData !== "undefined" ? screenEfficiencyDashboardData : { daily: [], movieSummary: [] });
+
 const effState = {
   charts: {},
-  daily: screenEfficiencyDashboardData.daily || [],
-  summary: screenEfficiencyDashboardData.movieSummary || [],
+  daily: dashboardData.daily || [],
+  summary: dashboardData.movieSummary || [],
 };
 
 Chart.defaults.font.family =
@@ -76,6 +80,9 @@ function renderInsights() {
     (a, b) => n(b.mean_ScEI_screen_efficiency) - n(a.mean_ScEI_screen_efficiency),
   )[0];
   const inefficient = validRows(summary, "mean_MII_pct").sort((a, b) => n(b.mean_MII_pct) - n(a.mean_MII_pct))[0];
+  const showIntensive = validRows(summary, "mean_ShOI_show_overallocation").sort(
+    (a, b) => n(b.mean_ShOI_show_overallocation) - n(a.mean_ShOI_show_overallocation),
+  )[0];
   const audienceStronger = summary.filter((row) => {
     const ss = n(row.mean_SS_screen_share_pct);
     const aud = n(row.mean_audience_share_pct);
@@ -101,6 +108,9 @@ function renderInsights() {
       : "",
     inefficient
       ? `<span class="badge">MII</span><b>${inefficient.movie_nm}</b>은 평균 MII가 <b>${pct(inefficient.mean_MII_pct)}</b>로 높아, 높은 스크린 배정이 좌석 활용으로 충분히 이어졌는지 추가 확인이 필요한 사례입니다.`
+      : "",
+    showIntensive
+      ? `<span class="badge">ShOI</span><b>${showIntensive.movie_nm}</b>은 평균 ShOI가 <b>${ratio(showIntensive.mean_ShOI_show_overallocation)}</b>로 가장 높았습니다. 이는 TOP10 내부에서 관객 비중보다 상영 비중이 상대적으로 컸던 사례입니다.`
       : "",
     summary.length
       ? `<span class="badge">판단</span>분석 영화 ${summary.length}편 중 <b>${audienceStronger.length}편</b>은 평균 관객 점유율이 평균 스크린 점유율보다 높았습니다. 이 경우 스크린 배정이 관객 반응 대비 과도했다고 단정하기 어렵습니다.`
@@ -300,15 +310,19 @@ function renderDailyChart(movie) {
     data: {
       labels: rows.map((row) => row.date),
       datasets: [
-        { label: "SS", data: rows.map((row) => n(row.SS_screen_share_pct)), borderColor: "#2F6F9F", tension: 0.25 },
-        { label: "좌석판매율", data: rows.map((row) => n(row.seat_sales_rate_pct)), borderColor: "#55A99A", tension: 0.25 },
-        { label: "MII", data: rows.map((row) => n(row.MII_pct)), borderColor: "#E76F51", tension: 0.25 },
+        { label: "SS", data: rows.map((row) => n(row.SS_screen_share_pct)), borderColor: "#2F6F9F", tension: 0.25, yAxisID: "y" },
+        { label: "좌석판매율", data: rows.map((row) => n(row.seat_sales_rate_pct)), borderColor: "#55A99A", tension: 0.25, yAxisID: "y" },
+        { label: "MII", data: rows.map((row) => n(row.MII_pct)), borderColor: "#E76F51", tension: 0.25, yAxisID: "y" },
+        { label: "ShOI", data: rows.map((row) => n(row.ShOI_show_overallocation)), borderColor: "#7C3AED", tension: 0.25, yAxisID: "y1" },
       ],
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      scales: { y: { beginAtZero: true, title: { display: true, text: "%" } } },
+      scales: {
+        y: { beginAtZero: true, title: { display: true, text: "%" } },
+        y1: { beginAtZero: true, position: "right", grid: { drawOnChartArea: false }, title: { display: true, text: "ShOI" } },
+      },
     },
   });
 }
